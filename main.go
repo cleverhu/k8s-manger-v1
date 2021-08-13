@@ -1,15 +1,30 @@
 package main
 
 import (
-	"log"
+	"github.com/gin-gonic/gin"
+	"k8s-manger-v1/deploy"
+	"k8s-manger-v1/lib"
+
+	"net/http"
 )
 
-func CheckErr(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
 func main() {
+	r := gin.Default()
+	r.Static("/static", "./static")
+	r.LoadHTMLGlob("html/**/*")
+	r.GET("/deployments", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "deploy_list.html",
+			lib.DataBuilder().
+				SetTitle("deployment列表").
+				SetData("DepList", deploy.ListAll("default")))
+	})
 
+	r.GET("/deployments/:name", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "deploy_detail.html",
+			lib.DataBuilder().
+				SetTitle("deployment详细信息-"+c.Param("name")).
+				SetData("DepDetail", deploy.Detail("default", c.Param("name"))))
+	})
+
+	r.Run(":80")
 }

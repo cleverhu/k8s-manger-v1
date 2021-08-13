@@ -7,13 +7,24 @@ import (
 )
 
 func ListAll(namespace string) []*Deployment {
-	deps := []*Deployment{}
+
+	if namespace == "" {
+		namespace = "default"
+	}
+	deps := make([]*Deployment, 0)
 	ctx := context.Background()
-	opt := metav1.ListOptions{}
-	list, _ := lib.K8sClient.AppsV1().Deployments(namespace).List(ctx, opt)
+	listOpts := metav1.ListOptions{}
+	list, _ := lib.K8sClient.AppsV1().Deployments(namespace).List(ctx, listOpts)
 	for _, item := range list.Items {
-		dep := &Deployment{Name: item.Name}
+
+		dep := &Deployment{
+			NameSpace: namespace,
+			Name:      item.Name,
+			Replicas:  [3]int32{item.Status.Replicas, item.Status.AvailableReplicas, item.Status.UnavailableReplicas},
+			Images:    GetImages(item),
+		}
 		deps = append(deps, dep)
 	}
+
 	return deps
 }
