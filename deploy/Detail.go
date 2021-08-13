@@ -3,18 +3,41 @@ package deploy
 import (
 	"context"
 	"k8s-manger-v1/lib"
+	v1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+func GetPodsByDep(namespace string, dep v1.Deployment) []*Pod {
+	ctx := context.Background()
+	listOpts := metav1.ListOptions{
+		LabelSelector: GetLabels(dep.Spec.Selector.MatchLabels),
+	}
+	pods, err := lib.K8sClient.CoreV1().Pods(namespace).List(ctx, listOpts)
+	lib.CheckError(err)
+	ret := make([]*Pod, 0)
+	for _, pod := range pods.Items {
+
+		ret = append(ret, &Pod{
+			Name:       pod.Name,
+			Images:     GetImagesByPod(pod.Spec.Containers),
+			NodeName:   pod.Spec.NodeName,
+			CreateTime: TimeFormat(pod.CreationTimestamp.Time),
+		})
+	}
+	return ret
+}
 
 func Detail(namespace string, name string) *Deployment {
 
 	ctx := context.Background()
 	getOpts := metav1.GetOptions{}
-	deploy, _ := lib.K8sClient.AppsV1().Deployments(namespace).Get(ctx, name, getOpts)
+	deploy, err := lib.K8sClient.AppsV1().Deployments(namespace).Get(ctx, name, getOpts)
+	lib.CheckError(err)
 	return &Deployment{
 		Name:       name,
 		NameSpace:  namespace,
 		Images:     GetImages(*deploy),
-		CreateTime: deploy.CreationTimestamp.Format("2006-01-02 15:04:05"),
+		CreateTime: TimeFormat(deploy.CreationTimestamp.Time),
+		Pods:       GetPodsByDep(namespace, *deploy),
 	}
 }
