@@ -1,7 +1,15 @@
 package main
 
-import "fmt"
+import (
+	"log"
+)
+
+func CheckErr(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 func main() {
-	fmt.Println("hello world")
+
 }
