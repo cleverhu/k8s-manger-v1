@@ -1,1 +1,1 @@
-init project!!# k8s-manger-v1
+# k8s-manger-v1
