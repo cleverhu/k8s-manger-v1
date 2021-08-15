@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"k8s-manger-v1/core"
 	"k8s-manger-v1/deploy"
 	"k8s-manger-v1/lib"
 
@@ -39,5 +40,6 @@ func main() {
 				SetData("DepDetail", deploy.Detail("default", c.Param("name"))))
 	})
 
+	core.InitDeployment()
 	r.Run(":80")
 }
