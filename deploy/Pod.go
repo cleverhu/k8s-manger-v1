@@ -1,7 +1,8 @@
 package deploy
 
 type Pod struct {
-	Name       string
+	Name string
+
 	Images     string
 	NodeName   string
 	CreateTime string

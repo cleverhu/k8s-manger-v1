@@ -30,14 +30,14 @@ func main() {
 		c.HTML(http.StatusOK, "deploy_list.html",
 			lib.DataBuilder().
 				SetTitle("deployment列表").
-				SetData("DepList", deploy.ListAll("default")))
+				SetData("DepList", deploy.ListAll("")))
 	})
 
-	r.GET("/deployments/:name", func(c *gin.Context) {
+	r.GET("/deployments/:namespace/:name", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "deploy_detail.html",
 			lib.DataBuilder().
 				SetTitle("deployment详细信息-"+c.Param("name")).
-				SetData("DepDetail", deploy.Detail("default", c.Param("name"))))
+				SetData("DepDetail", deploy.Detail(c.Param("namespace"), c.Param("name"))))
 	})
 
 	core.InitDeployment()

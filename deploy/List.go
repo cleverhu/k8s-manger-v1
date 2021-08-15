@@ -5,16 +5,16 @@ import (
 )
 
 func ListAll(namespace string) []*Deployment {
-	if namespace == "" {
-		namespace = "default"
-	}
+	//if namespace == "" {
+	//	namespace = "default"
+	//}
 	ret := make([]*Deployment, 0)
 
 	deps, _ := core.DepMap.ListByNS(namespace)
 
 	for _, dep := range deps {
 		tmp := &Deployment{
-			NameSpace: namespace,
+			NameSpace: dep.Namespace,
 			Name:      dep.Name,
 			Replicas:  [3]int32{dep.Status.Replicas, dep.Status.AvailableReplicas, dep.Status.UnavailableReplicas},
 			Images:    GetImages(*dep),

@@ -8,6 +8,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/informers"
 	"log"
+	"sort"
 	"sync"
 )
 
@@ -54,9 +55,29 @@ func (this *DeploymentMap) Update(deploy *v1.Deployment) error {
 }
 
 func (this *DeploymentMap) ListByNS(ns string) ([]*v1.Deployment, error) {
-	if list, ok := this.Data.Load(ns); ok {
-		return list.([]*v1.Deployment), nil
+	//fmt.Println(ns)
+	if ns != "" {
+		if list, ok := this.Data.Load(ns); ok {
+			return list.([]*v1.Deployment), nil
+		}
+	} else {
+		ret := make([]*v1.Deployment, 0)
+		DepMap.Data.Range(func(key, value interface{}) bool {
+			for _, dep := range value.([]*v1.Deployment) {
+				ret = append(ret, dep)
+			}
+			sort.Slice(ret, func(i, j int) bool {
+				if ret[i].Namespace == ret[j].Namespace {
+					return ret[i].Name < ret[j].Name
+				} else {
+					return ret[i].Namespace < ret[j].Namespace
+				}
+			})
+			return true
+		})
+		return ret, nil
 	}
+
 	return nil, errors.New("record not found")
 }
 

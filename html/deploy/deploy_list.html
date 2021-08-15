@@ -5,6 +5,7 @@
             <thead>
             <tr>
                 <th style="width:50px"></th>
+                <th style="width:100px">命名空间</th>
                 <th style="width:100px">状态</th>
                 <th style="width:40%">名称</th>
                 <th style="width:20%">镜像</th>
@@ -16,8 +17,9 @@
             {{range .Data.DepList}}
             <tr>
                 <td><input type="checkbox"/></td>
+                <td>{{.NameSpace}}</td>
                 <td> -</td>
-                <td><a href="/deployments/{{.Name}}"> {{.Name}}</a></td>
+                <td><a href="/deployments/{{.NameSpace}}/{{.Name}}"> {{.Name}}</a></td>
                 <td>{{.Images}}</td>
                 <td class="is-bold">
                     <span>{{index .Replicas 0}}</span>/
