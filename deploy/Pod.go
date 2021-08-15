@@ -5,5 +5,5 @@ type Pod struct {
 	Images     string
 	NodeName   string
 	CreateTime string
-	Status     string
+	IP         string
 }

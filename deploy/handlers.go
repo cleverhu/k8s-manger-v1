@@ -7,12 +7,12 @@ import (
 )
 
 func RegHandlers(r *gin.Engine) {
-	r.POST("/update/deployments/scale", incrReplicas)
+	r.POST("/update/deployment/scale", incrReplicas)
 }
 
 func incrReplicas(c *gin.Context) {
 	req := &struct {
-		NameSpace  string `json:"namespace"`
+		NameSpace  string `json:"ns"`
 		Deployment string `json:"deployment"`
 		Dec        bool   `json:"dec"`
 	}{}
@@ -28,5 +28,5 @@ func incrReplicas(c *gin.Context) {
 	}
 	_, err = lib.K8sClient.AppsV1().Deployments(req.NameSpace).Update(c, deploy, metav1.UpdateOptions{})
 	lib.CheckError(err)
-	lib.Success("OK", c)
+	lib.Success("Ok", c)
 }

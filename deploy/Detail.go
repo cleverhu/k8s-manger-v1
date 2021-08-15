@@ -25,6 +25,7 @@ func GetPodsByDep(namespace string, dep v1.Deployment) []*Pod {
 				Images:     GetImagesByPod(pod.Spec.Containers),
 				NodeName:   pod.Spec.NodeName,
 				CreateTime: TimeFormat(pod.CreationTimestamp.Time),
+				IP:         pod.Status.PodIP,
 			})
 		}
 	}
