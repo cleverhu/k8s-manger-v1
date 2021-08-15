@@ -1,9 +1,12 @@
 package deploy
 
 import (
+	"context"
 	"fmt"
+	"k8s-manger-v1/lib"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"time"
 )
 
@@ -25,6 +28,25 @@ func GetLabels(m map[string]string) string {
 	}
 
 	return labels
+}
+
+func GetPodLabelsByDeployment(deploy *appsv1.Deployment) string {
+	selector, _ := metav1.LabelSelectorAsSelector(deploy.Spec.Selector)
+	rs, _ := lib.K8sClient.AppsV1().ReplicaSets(deploy.Namespace).List(context.Background(), metav1.ListOptions{LabelSelector: selector.String()})
+	podLabel := ""
+	for _, item := range rs.Items {
+		if item.Annotations["deployment.kubernetes.io/revision"] != deploy.Annotations["deployment.kubernetes.io/revision"] {
+			continue
+		}
+		for _, v := range item.OwnerReferences {
+			if v.Name == deploy.Name {
+				s, _ := metav1.LabelSelectorAsSelector(item.Spec.Selector)
+				podLabel = s.String()
+			}
+		}
+	}
+
+	return podLabel
 }
 
 func GetImagesByPod(containers []corev1.Container) string {

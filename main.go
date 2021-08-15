@@ -10,6 +10,7 @@ import (
 )
 
 func main() {
+	//gin.SetMode(gin.DebugMode)
 	r := gin.New()
 
 	r.Use(func(c *gin.Context) {
@@ -33,6 +34,10 @@ func main() {
 				SetData("DepList", deploy.ListAll("")))
 	})
 
+	r.POST("/deployments", func(c *gin.Context) {
+		c.JSON(200, gin.H{"message": "Ok", "result": deploy.ListAll("")})
+	})
+
 	r.GET("/deployments/:namespace/:name", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "deploy_detail.html",
 			lib.DataBuilder().
@@ -41,5 +46,6 @@ func main() {
 	})
 
 	core.InitDeployment()
+
 	r.Run(":80")
 }
