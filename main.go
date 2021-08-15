@@ -9,9 +9,22 @@ import (
 )
 
 func main() {
-	r := gin.Default()
+	r := gin.New()
+
+	r.Use(func(c *gin.Context) {
+		defer func() {
+			if err := recover(); err != nil {
+				c.AbortWithStatusJSON(400, gin.H{"error": err})
+			}
+		}()
+		c.Next()
+	})
+
 	r.Static("/static", "./static")
 	r.LoadHTMLGlob("html/**/*")
+
+	deploy.RegHandlers(r)
+
 	r.GET("/deployments", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "deploy_list.html",
 			lib.DataBuilder().

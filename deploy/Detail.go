@@ -5,6 +5,7 @@ import (
 	"k8s-manger-v1/lib"
 	v1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"strings"
 )
 
 func GetPodsByDep(namespace string, dep v1.Deployment) []*Pod {
@@ -16,13 +17,16 @@ func GetPodsByDep(namespace string, dep v1.Deployment) []*Pod {
 	lib.CheckError(err)
 	ret := make([]*Pod, 0)
 	for _, pod := range pods.Items {
-
-		ret = append(ret, &Pod{
-			Name:       pod.Name,
-			Images:     GetImagesByPod(pod.Spec.Containers),
-			NodeName:   pod.Spec.NodeName,
-			CreateTime: TimeFormat(pod.CreationTimestamp.Time),
-		})
+		//fmt.Println(pod.Name, dep.Name)
+		if strings.HasPrefix(pod.Name, dep.Name) {
+			//fmt.Println(pod.Status.ContainerStatuses)
+			ret = append(ret, &Pod{
+				Name:       pod.Name,
+				Images:     GetImagesByPod(pod.Spec.Containers),
+				NodeName:   pod.Spec.NodeName,
+				CreateTime: TimeFormat(pod.CreationTimestamp.Time),
+			})
+		}
 	}
 	return ret
 }
@@ -39,5 +43,6 @@ func Detail(namespace string, name string) *Deployment {
 		Images:     GetImages(*deploy),
 		CreateTime: TimeFormat(deploy.CreationTimestamp.Time),
 		Pods:       GetPodsByDep(namespace, *deploy),
+		Replicas:   [3]int32{deploy.Status.Replicas, deploy.Status.AvailableReplicas, deploy.Status.UnavailableReplicas},
 	}
 }
