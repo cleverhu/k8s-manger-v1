@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	v1 "k8s.io/api/apps/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"log"
 	"sync"
 )
@@ -58,25 +57,24 @@ func (this *RSMapStruct) ListByNS(ns string) ([]*v1.ReplicaSet, error) {
 	return nil, errors.New("rs record not found")
 }
 
-func (this *RSMapStruct) GetPodLabelsByDeployment(deploy *v1.Deployment) (string, error) {
+func (this *RSMapStruct) GetRsLabelsByDeployment(deploy *v1.Deployment) ([]map[string]string, error) {
 	rs, err := this.ListByNS(deploy.Namespace)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	podLabel := ""
+	ret := make([]map[string]string, 0)
 	for _, item := range rs {
-		if item.Annotations["deployment.kubernetes.io/revision"] != deploy.Annotations["deployment.kubernetes.io/revision"] {
-			continue
-		}
+		//if item.Annotations["deployment.kubernetes.io/revision"] != deploy.Annotations["deployment.kubernetes.io/revision"] {
+		//	continue
+		//}
 		for _, v := range item.OwnerReferences {
 			if v.Name == deploy.Name {
-				s, _ := metav1.LabelSelectorAsSelector(item.Spec.Selector)
-				podLabel = s.String()
-				return podLabel, nil
+				ret = append(ret, item.Labels)
+				break
 			}
 		}
 	}
-	return podLabel, nil
+	return ret, nil
 }
 
 type RSHandler struct {

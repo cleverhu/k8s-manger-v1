@@ -7,9 +7,9 @@ import (
 )
 
 func GetPodsByDep(dep v1.Deployment) []*Pod {
-	labels, err := core.RSMap.GetPodLabelsByDeployment(&dep)
+	rsLabelsMap, err := core.RSMap.GetRsLabelsByDeployment(&dep)
 	lib.CheckError(err)
-	pods, err := core.PodMap.ListByLabelsAndNS(dep.Namespace, labels)
+	pods, err := core.PodMap.ListByRsLabelsAndNS(dep.Namespace, rsLabelsMap)
 	lib.CheckError(err)
 	ret := make([]*Pod, 0)
 	for _, pod := range pods {

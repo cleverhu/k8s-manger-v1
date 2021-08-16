@@ -60,23 +60,19 @@ func (this *PodMapStruct) ListByNS(ns string) ([]*corev1.Pod, error) {
 	return nil, fmt.Errorf("pods not found")
 }
 
-func (this *PodMapStruct) ListByLabelsAndNS(ns, labels string) ([]*corev1.Pod, error) {
-	//fmt.Println("|||")
-	//defer func() {
-	//	fmt.Println("|||")
-	//}()
+func (this *PodMapStruct) ListByRsLabelsAndNS(ns string, rsLabels []map[string]string) ([]*corev1.Pod, error) {
 	pods, err := this.ListByNS(ns)
 	if err != nil {
 		return nil, err
 	}
 	ret := make([]*corev1.Pod, 0)
 	for _, pod := range pods {
-		//fmt.Println("pod",GetLabels(pod.Labels) ,"|",labels,GetLabels(pod.Labels) == labels)
-		if GetLabels(pod.Labels) == labels {
-			ret = append(ret, pod)
+		for _, rLabel := range rsLabels {
+			if IsValidLabel(pod.Labels, rLabel) {
+				ret = append(ret, pod)
+			}
 		}
 	}
-
 	return ret, nil
 }
 

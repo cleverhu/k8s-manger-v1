@@ -42,11 +42,12 @@ func GetPodLabelsByDeployment(deploy *appsv1.Deployment) string {
 			if v.Name == deploy.Name {
 				s, _ := metav1.LabelSelectorAsSelector(item.Spec.Selector)
 				podLabel = s.String()
+				return podLabel
 			}
 		}
 	}
+	return ""
 
-	return podLabel
 }
 
 func GetImagesByPod(containers []corev1.Container) string {

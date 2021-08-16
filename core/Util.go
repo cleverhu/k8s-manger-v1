@@ -1,23 +1,11 @@
 package core
 
-import (
-	"fmt"
-	"sort"
-)
-
-func GetLabels(m map[string]string) string {
-	keys := make([]string, 0)
-	for key := range m {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	labels := ""
-	for _, key := range keys {
-		if labels != "" {
-			labels += ","
+func IsValidLabel(m1, m2 map[string]string) bool {
+	for key := range m2 {
+		if m2[key] != m1[key] {
+			return false
 		}
-		labels += fmt.Sprintf("%s=%s", key, m[key])
 	}
 
-	return labels
+	return true
 }
