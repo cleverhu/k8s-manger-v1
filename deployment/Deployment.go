@@ -1,4 +1,4 @@
-package deploy
+package deployment
 
 type Deployment struct {
 	Name       string
@@ -7,4 +7,6 @@ type Deployment struct {
 	Images     string
 	CreateTime string
 	Pods       []*Pod
+	IsComplete bool
+	Message    string
 }

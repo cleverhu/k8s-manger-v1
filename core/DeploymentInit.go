@@ -12,11 +12,11 @@ import (
 	"sync"
 )
 
-type DeploymentMap struct {
+type DeploymentMapStruct struct {
 	Data sync.Map //key ns value []*v1.Deployment
 }
 
-func (this *DeploymentMap) Add(deploy *v1.Deployment) {
+func (this *DeploymentMapStruct) Add(deploy *v1.Deployment) {
 	key := deploy.Namespace
 	if value, ok := this.Data.Load(key); ok {
 		value = append(value.([]*v1.Deployment), deploy)
@@ -26,26 +26,26 @@ func (this *DeploymentMap) Add(deploy *v1.Deployment) {
 	}
 }
 
-func (this *DeploymentMap) Delete(deploy *v1.Deployment) {
+func (this *DeploymentMapStruct) Delete(deploy *v1.Deployment) {
 	key := deploy.Namespace
 	if value, ok := this.Data.Load(key); ok {
 		for index, dep := range value.([]*v1.Deployment) {
 			if dep.Name == deploy.Name {
 				value = append(value.([]*v1.Deployment)[0:index], value.([]*v1.Deployment)[index+1:]...)
-				DepMap.Data.Store(key, value)
+				this.Data.Store(key, value)
 				return
 			}
 		}
 	}
 }
 
-func (this *DeploymentMap) Update(deploy *v1.Deployment) error {
+func (this *DeploymentMapStruct) Update(deploy *v1.Deployment) error {
 	key := deploy.Namespace
 	if value, ok := this.Data.Load(key); ok {
-
 		for index, dep := range value.([]*v1.Deployment) {
 			if dep.Name == deploy.Name {
 				value.([]*v1.Deployment)[index] = deploy
+				this.Data.Store(key, value)
 				return nil
 			}
 		}
@@ -54,15 +54,14 @@ func (this *DeploymentMap) Update(deploy *v1.Deployment) error {
 	return fmt.Errorf("deployment-%s not found", deploy.Name)
 }
 
-func (this *DeploymentMap) ListByNS(ns string) ([]*v1.Deployment, error) {
-	//fmt.Println(ns)
+func (this *DeploymentMapStruct) ListByNS(ns string) ([]*v1.Deployment, error) {
 	if ns != "" {
 		if list, ok := this.Data.Load(ns); ok {
 			return list.([]*v1.Deployment), nil
 		}
 	} else {
 		ret := make([]*v1.Deployment, 0)
-		DepMap.Data.Range(func(key, value interface{}) bool {
+		DeploymentMap.Data.Range(func(key, value interface{}) bool {
 			for _, dep := range value.([]*v1.Deployment) {
 				ret = append(ret, dep)
 			}
@@ -78,7 +77,20 @@ func (this *DeploymentMap) ListByNS(ns string) ([]*v1.Deployment, error) {
 		return ret, nil
 	}
 
-	return nil, errors.New("record not found")
+	return nil, errors.New("deployments record not found")
+}
+
+func (this *DeploymentMapStruct) Get(ns, name string) (*v1.Deployment, error) {
+	deps, err := this.ListByNS(ns)
+	if err != nil {
+		return nil, err
+	}
+	for _, dep := range deps {
+		if dep.Name == name {
+			return dep, nil
+		}
+	}
+	return nil, errors.New("deployment record not found")
 }
 
 type DepHandler struct {
@@ -86,22 +98,22 @@ type DepHandler struct {
 
 func (this *DepHandler) OnAdd(obj interface{}) {
 	dep := obj.(*v1.Deployment)
-	DepMap.Add(dep)
+	DeploymentMap.Add(dep)
 }
 func (this *DepHandler) OnUpdate(oldObj interface{}, newObj interface{}) {
-	err := DepMap.Update(newObj.(*v1.Deployment))
+	err := DeploymentMap.Update(newObj.(*v1.Deployment))
 	if err != nil {
 		log.Println(err)
 	}
 }
 func (this *DepHandler) OnDelete(obj interface{}) {
-	DepMap.Delete(obj.(*v1.Deployment))
+	DeploymentMap.Delete(obj.(*v1.Deployment))
 }
 
-var DepMap *DeploymentMap
+var DeploymentMap *DeploymentMapStruct
 
 func init() {
-	DepMap = &DeploymentMap{}
+	DeploymentMap = &DeploymentMapStruct{}
 
 }
 
@@ -109,5 +121,12 @@ func InitDeployment() {
 	factory := informers.NewSharedInformerFactory(lib.K8sClient, 0)
 	depInformer := factory.Apps().V1().Deployments().Informer()
 	depInformer.AddEventHandler(&DepHandler{})
+
+	podInformer := factory.Core().V1().Pods().Informer()
+	podInformer.AddEventHandler(&PodHandler{})
+
+	rsInformer := factory.Apps().V1().ReplicaSets().Informer()
+	rsInformer.AddEventHandler(&RSHandler{})
+
 	factory.Start(wait.NeverStop)
 }

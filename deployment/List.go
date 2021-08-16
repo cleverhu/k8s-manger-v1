@@ -1,4 +1,4 @@
-package deploy
+package deployment
 
 import (
 	"k8s-manger-v1/core"
@@ -10,7 +10,7 @@ func ListAll(namespace string) []*Deployment {
 	//}
 	ret := make([]*Deployment, 0)
 
-	deps, _ := core.DepMap.ListByNS(namespace)
+	deps, _ := core.DeploymentMap.ListByNS(namespace)
 
 	for _, dep := range deps {
 		tmp := &Deployment{
